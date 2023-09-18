@@ -1,95 +1,122 @@
 var express = require('express');
 var router = express.Router();
+const jwtSecret = require('dotenv').config().parsed.JWT_SECRET
 
-router.get('/', function(req, res) {
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./db/texts.sqlite');
+
+
+router.get('/', function(req, res, next) {
     const data = {
         data: {
-            text: "Alice heter jag och kommer från en liten by i norra Skåne.",
-            text2: "På fritiden sysslar jag en del med musik och tycker även om att fotografera."
+            msg: "Vem är jag? Ingen vet."
         }
     };
 
     res.json(data);
 });
 
-router.get('/reports/week/1', function(req, res) {
-    const data = {
-        data: {
-            text: "GitHub-repot: https://github.com/alfs18/jsramverk",
-            text2: "Innehållet från README.md:",
-            // msg: "# my-project
-            //
-            // ## Project setup
-            // ```
-            // npm install
-            // ```
-            //
-            // ### Compiles and hot-reloads for development
-            // ```
-            // npm run serve
-            // ```
-            //
-            // ### Compiles and minifies for production
-            // ```
-            // npm run build
-            // ```
-            //
-            // ### Run your tests
-            // ```
-            // npm run test
-            // ```
-            //
-            // ### Lints and fixes files
-            // ```
-            // npm run lint
-            // ```
-            //
-            // ### Customize configuration
-            // See [Configuration Reference](https://cli.vuejs.org/config/)."
-        }
-    };
+async function getReports(req, res, next)  {
+    reports = {};
+    let sql = `SELECT id, title FROM reports`;
+    await db.all(sql, (err, rows) => {
+        rows.forEach(function (row) {
 
-    res.json(data);
-});
+            reports[row.id] = row
+        });
 
-router.get('/reports/week/2', function(req, res) {
-    const data = {
-        data: {
-            text: "Inspirationen till min date-picker fick jag från att titta på några olika alternativ på internet, bland annat från den här sidan:",
-            text2: "https://www.smashingmagazine.com/2017/07/designing-perfect-date-time-picker/",
-            text3: "Blev inte helt nöjd med den dock, då jag egentligen velat kunna klicka fram månaderna, så att de inte syntes från början, samt att år, månad och dag skulle vara i samma ruta, så att när man valt år, skulle den sen automatiskt gå vidare till månad och sen till dagar, men det hade jag tyvärr inte någon kunskap till."
-        }
-    };
-
-    res.json(data);
-});
-
-router.get('/reports/week/3', function(req, res) {
-    const data = {
-        data: {
-            msg: "nothing"
-        }
-    };
-
-    res.json(data);
-});
-
-router.post("/reports",
-    (req, res, next) => checkToken(req, res, next),
-    (req, res) => reports.addReport(res, req.body));
-
-function checkToken(req, res, next) {
-    const token = req.headers['x-access-token'];
-
-    jwt.verify(token, process.env.JWT_SECRET, function(err, decoded) {
-        if (err) {
-            // send error response
-        }
-
-        // Valid token send on the request
         next();
     });
 }
 
+router.get('/reports/weeks', (req, res, next) => getReports(req, res, next), (req, res) => {
+
+    data = {
+        hello: "hello",
+        data: reports
+    };
+
+    console.log("row", data.data)
+
+    console.log("reports/weeks", data);
+
+    res.json(data);
+});
+
+async function getReport(req, res, next)  {
+    report = {};
+    let sql = `SELECT * FROM reports WHERE id = ?`;
+    await db.get(sql, req.params.kmom, (err, rows) => {
+        report["id"] = rows.id
+        report["title"] = rows.title
+        report["report"] = rows.report
+
+        next();
+    });
+}
+
+router.get('/reports/edit/:kmom', (req, res, next) => getReport(req, res, next), (req, res) => {
+
+    data = {
+        name: "Kursmoment " + req.params.kmom,
+        msg: kmoms[req.params.kmom-1],
+        data: {
+            id: report.id,
+            title: report.title,
+            report: report.report,
+        }
+    };
+
+    res.json(data);
+});
+
+router.get('/reports/week/:kmom', (req, res, next) => getReport(req, res, next), (req, res) => {
+
+    data = {
+        name: "Kursmoment " + req.params.kmom,
+        msg: kmoms[req.params.kmom-1],
+        data: {
+            id: report.id,
+            title: report.title,
+            report: report.report,
+        }
+    };
+
+    res.json(data);
+});
+
+function checkToken(req, res, next)  {
+    const jwt = require('jsonwebtoken');
+
+    const token = req.headers['x-access-token'];
+    console.log("checking token", token);
+
+    jwt.verify(token, jwtSecret, function(err, decoded) {
+        console.log("hello, verifying");
+        if (err) {
+            // send error response
+            console.log("error", err);
+        }
+
+        // Valid token send on the request
+        console.log("valid");
+        next();
+    });
+}
+
+router.get('/logged-in',
+    (req, res, next) => checkToken(req, res, next),
+    function(req, res, next) {
+
+    console.log("logged in");
+    const data = {
+        data: {
+            dirTo: "/Logged-in",
+            text: "Du har blivit inloggad"
+        }
+    };
+
+    res.json(data);
+});
 
 module.exports = router;

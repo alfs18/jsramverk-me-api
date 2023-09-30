@@ -74,7 +74,6 @@ router.get('/reports/week/:kmom', (req, res, next) => getReport(req, res, next),
 
     data = {
         name: "Kursmoment " + req.params.kmom,
-        msg: kmoms[req.params.kmom-1],
         data: {
             id: report.id,
             title: report.title,

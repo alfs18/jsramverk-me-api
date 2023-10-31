@@ -1,20 +1,21 @@
 const express = require('express');
 const cors = require('cors');
-const morgan = require('morgan');
+// const morgan = require('morgan');
 const bodyParser = require("body-parser");
-const jwtSecret = require('dotenv').config().parsed.JWT_SECRET
+const jwtSecret = require('dotenv').config().parsed.JWT_SECRET;
 
 const app = express();
 const port = 1337;
 
 const index = require('./routes/index');
 
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./db/texts.sqlite');
+// const sqlite3 = require('sqlite3').verbose();
+// const db = new sqlite3.Database('./db/texts.sqlite');
+const db = require('./db/database.js');
 
 const bcrypt = require('bcryptjs');
 const saltRounds = 10;
-const myPlaintextPassword = 'longandhardP4$$w0rD';
+// const myPlaintextPassword = 'longandhardP4$$w0rD';
 
 app.use(cors());
 
@@ -34,7 +35,7 @@ app.use('/', index);
 
 // Create new user
 app.post("/register", (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
 
     bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
         // spara användaren i databasen.
@@ -45,12 +46,12 @@ app.post("/register", (req, res) => {
             req.body.year,
             req.body.month,
             req.body.day, (err) => {
-            if (err) {
-                // returnera error
-                console.log("error", err);
-            }
-            console.log("OK");
-        });
+                if (err) {
+                    // returnera error
+                    console.log("error", err);
+                }
+                console.log("OK");
+            });
     });
 
     res.status(201).json({
@@ -62,10 +63,7 @@ app.post("/register", (req, res) => {
 
 
 app.post("/login", (req, res) => {
-    console.log("smask", req.body);
-
-    var redAns = "/logged-in";
-    req.match = "yes";
+    // req.match = "yes";
 
     const myPlaintextPassword = req.body.password;
 
@@ -79,18 +77,24 @@ app.post("/login", (req, res) => {
         } else if (row == undefined) {
             // Emailen finns ej i databasen
             console.log("No such email");
+
+            const data = {
+                msg: "Kunde inte logga in. Försök igen."
+            };
+
+            res.json(data);
         } else {
             const hash = row.password;
 
             const jwt = require('jsonwebtoken');
             var end = res;
+
             bcrypt.compare(myPlaintextPassword, hash, function(err, res) {
                 // res innehåller nu true eller false beroende på om det är rätt lösenord.
                 if (err) {
                     // returnera error
                     console.log("Wrong password.");
                     end.redirect("/no");
-
                 } else if (res == true) {
                     // lösenorden matchar
                     console.log("Correct");
@@ -107,7 +111,7 @@ app.post("/login", (req, res) => {
                         // valid token
                         console.log("token exist");
 
-                        data = {
+                        var data = {
                             token: token,
                             data: {
                                 dirTo: "/logged-in"
@@ -124,8 +128,8 @@ app.post("/login", (req, res) => {
                     const data = {
                         msg: "Kunde inte logga in. Försök igen."
                     };
+
                     end.json(data);
-                    console.log("no");
                 }
             });
         }
@@ -133,7 +137,6 @@ app.post("/login", (req, res) => {
         return row
             ? console.log(row.name)
             : console.log(`Email: ${email} is not found.`);
-
     });
 });
 
@@ -164,19 +167,19 @@ function checkToken(req, res, next)  {
     next();
 }
 
-function addReport (res, req) {
+function addReport(res, req) {
     console.log("report req", req);
 
     // spara användaren i databasen.
     db.run("INSERT INTO reports (title, report) VALUES (?, ?)",
         req.title,
         req.text, (err) => {
-        if (err) {
-            // returnera error
-            console.log("error", err);
-        }
-        console.log("OK");
-    });
+            if (err) {
+                // returnera error
+                console.log("error", err);
+            }
+            console.log("OK");
+        });
 
     return res.status(201).json({
         data: {
@@ -196,12 +199,13 @@ app.post("/reports/edit",
                 id: req.body.id
             }
         });
-});
+    });
 
 app.post("/reports/edit/:id",
     (req, res, next) => checkToken(req, res, next),
     (req, res) => {
         let sql = `UPDATE reports SET title = ?, report = ? WHERE id = ?`;
+
         db.run(sql,
             req.body.title,
             req.body.text,
@@ -210,7 +214,7 @@ app.post("/reports/edit/:id",
                     // returnera error
                     console.log("error", err);
                 }
-        });
+            });
 
         res.json({
             data: {
@@ -220,4 +224,8 @@ app.post("/reports/edit/:id",
 });
 
 // Start up server
-app.listen(port, () => console.log(`Example API listening on port ${port}!`));
+// app.listen(port, () => console.log(`Example API listening on port ${port}!`));
+
+const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+module.exports = server;

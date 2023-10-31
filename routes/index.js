@@ -2,9 +2,10 @@ var express = require('express');
 var router = express.Router();
 const jwtSecret = require('dotenv').config().parsed.JWT_SECRET
 
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./db/texts.sqlite');
 
+// const sqlite3 = require('sqlite3').verbose();
+// const db = new sqlite3.Database('./db/texts.sqlite');
+const db = require('../db/database.js');
 
 router.get('/', function(req, res, next) {
     const data = {
@@ -21,7 +22,6 @@ async function getReports(req, res, next)  {
     let sql = `SELECT id, title FROM reports`;
     await db.all(sql, (err, rows) => {
         rows.forEach(function (row) {
-
             reports[row.id] = row
         });
 
@@ -30,15 +30,13 @@ async function getReports(req, res, next)  {
 }
 
 router.get('/reports/weeks', (req, res, next) => getReports(req, res, next), (req, res) => {
-
-    data = {
+    const data = {
         hello: "hello",
         data: reports
     };
 
-    console.log("row", data.data)
-
-    console.log("reports/weeks", data);
+    // console.log("row", data.data)
+    // console.log("reports/weeks", data);
 
     res.json(data);
 });
@@ -56,8 +54,7 @@ async function getReport(req, res, next)  {
 }
 
 router.get('/reports/edit/:kmom', (req, res, next) => getReport(req, res, next), (req, res) => {
-
-    data = {
+    const data = {
         name: "Kursmoment " + req.params.kmom,
         msg: kmoms[req.params.kmom-1],
         data: {
@@ -71,10 +68,8 @@ router.get('/reports/edit/:kmom', (req, res, next) => getReport(req, res, next),
 });
 
 router.get('/reports/week/:kmom', (req, res, next) => getReport(req, res, next), (req, res) => {
-
-    data = {
+    const data = {
         name: "Kursmoment " + req.params.kmom,
-        msg: kmoms[req.params.kmom-1],
         data: {
             id: report.id,
             title: report.title,

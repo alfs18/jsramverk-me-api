@@ -7,6 +7,11 @@ const jwtSecret = require('dotenv').config().parsed.JWT_SECRET
 // const db = new sqlite3.Database('./db/texts.sqlite');
 const db = require('../db/database.js');
 
+// MongoDB
+const mongo = require("mongodb").MongoClient;
+// const dsn =  process.env.DBWEBB_DSN || "mongodb://127.0.0.1/mumin";
+const dsn =  process.env.DBWEBB_DSN || "mongodb://127.0.0.1/chat";
+
 router.get('/', function(req, res, next) {
     const data = {
         data: {
@@ -67,6 +72,16 @@ router.get('/reports/edit/:kmom', (req, res, next) => getReport(req, res, next),
     res.json(data);
 });
 
+// router.get("/listing", (req, res) => {
+//     console.log("listing");
+//     const data = {
+//         name: "Smask",
+//         data: "Hej"
+//     };
+//
+//     res.json(data);
+// });
+
 router.get('/reports/week/:kmom', (req, res, next) => getReport(req, res, next), (req, res) => {
     const data = {
         name: "Kursmoment " + req.params.kmom,
@@ -113,5 +128,83 @@ router.get('/logged-in',
 
     res.json(data);
 });
+
+// Save chat messages to MongoDB
+router.post("/chat/save", async (req, res) => {
+    let doc = req.body.msg;
+
+    await saveInCollection(dsn, "messages", {doc});
+
+    res.status(201).json({
+        data: {
+            msg: "Got a POST request, sending back 201 Created"
+        }
+    });
+});
+
+/**
+ * Save documents in a collection.
+ *
+ * @async
+ *
+ * @param {string} dsn        DSN to connect to database.
+ * @param {string} colName    Name of collection.
+ * @param {object} docs       Documents to be saved.
+ *
+ * @throws Error when database operation fails.
+ *
+ * @return {Promise<array>} The resultset as an array.
+ */
+async function saveInCollection(dsn, colName, doc) {
+    const client  = await mongo.connect(dsn);
+    const db = await client.db();
+    const col = await db.collection(colName);
+
+    const result = await col.insertOne(doc);
+    console.log(
+       `A document was inserted with the _id: ${result.insertedId}`,
+    );
+
+    await client.close();
+}
+
+// Return a JSON object with list of all documents within the collection.
+router.get("/list", async (req, res) => {
+    try {
+        let ans = await findInCollection(dsn, "messages", {}, {}, 0);
+
+        console.log(ans);
+        res.json(ans);
+    } catch (err) {
+        console.log(err);
+        res.json(err);
+    }
+});
+
+/**
+ * Find documents in a collection by matching search criteria.
+ *
+ * @async
+ *
+ * @param {string} dsn        DSN to connect to database.
+ * @param {string} colName    Name of collection.
+ * @param {object} criteria   Search criteria.
+ * @param {object} projection What to project in results.
+ * @param {number} limit      Limit the number of documents to retrieve.
+ *
+ * @throws Error when database operation fails.
+ *
+ * @return {Promise<array>} The resultset as an array.
+ */
+async function findInCollection(dsn, colName, criteria, projection, limit) {
+    const client  = await mongo.connect(dsn);
+    const db = await client.db();
+    const col = await db.collection(colName);
+    const res = await col.find(criteria, projection).limit(limit).toArray();
+
+    await client.close();
+
+    return res;
+}
 
 module.exports = router;

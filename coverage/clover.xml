@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1698744432565" clover="3.2.0">
-  <project timestamp="1698744432565" name="All files">
+<coverage generated="1698750558262" clover="3.2.0">
+  <project timestamp="1698750558262" name="All files">
     <metrics statements="140" coveredstatements="91" conditionals="24" coveredconditionals="11" methods="37" coveredmethods="20" elements="201" coveredelements="122" complexity="0" loc="140" ncloc="140" packages="3" files="3" classes="3"/>
     <package name="kmom3">
       <metrics statements="90" coveredstatements="57" conditionals="20" coveredconditionals="10" methods="20" coveredmethods="9"/>

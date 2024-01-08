@@ -53,3 +53,17 @@ VALUES
 3. Det ska gå att trycka på en länk för att ta sig till ett logga in-formulär.
 ')
 ;
+
+-- Insert Kmom10
+INSERT INTO reports
+    (title, report)
+VALUES
+    ('Kmom10', 'Hade stora problem med realtidsaspekten. Hade svårt att hitta och implementera den grafiska illustrationen och få den att visa ny data i realtid.
+Tyckte att projektet kändes svårt och tog lång tid, men ändå rimligt för kursen.
+Har tyckt att det mesta i den här kursen känts svårt, då det varit mycket nytt på en gång och inte lika tydliga guider och föreläsningar till kursmomenten.
+Upplever även att det varit svårare att få hjälp. Förstår att det blir lite luddigt när man kan välja olika ramverk osv.,
+men hade ändå uppskattat lite mer tips och guidning längs vägen. Kanske hade man kunnat minska ner på vissa delar. 
+Känner mig ändå nöjd med att jag äntligen tagit mig igenom den här kursen.
+Ger kursen 6/10 i betyg.
+')
+;
